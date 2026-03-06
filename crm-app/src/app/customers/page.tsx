@@ -26,6 +26,9 @@ export default function CustomersPage() {
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
 
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [newCustomer, setNewCustomer] = useState({ name: "", phone: "", notes: "" });
+
     // Update Form State
     const [updateStatus, setUpdateStatus] = useState("ULAŞILAMADI");
     const [updateNote, setUpdateNote] = useState("");
@@ -142,6 +145,40 @@ export default function CustomersPage() {
         return format(new Date(dateStr), "dd MMM yyyy", { locale: tr });
     };
 
+    const handleAddCustomer = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!newCustomer.name || !newCustomer.phone) {
+            toast.error("İsim ve telefon numarası zorunludur.");
+            return;
+        }
+
+        const toastId = toast.loading("Müşteri kaydediliyor...");
+        try {
+            const res = await fetch("/api/customers", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    name: newCustomer.name,
+                    phone: newCustomer.phone,
+                    notes: newCustomer.notes,
+                    status: "BEKLİYOR"
+                }),
+            });
+
+            if (res.ok) {
+                toast.success("Müşteri başarıyla eklendi!", { id: toastId });
+                setNewCustomer({ name: "", phone: "", notes: "" });
+                setIsAddModalOpen(false);
+                fetchCustomers();
+            } else {
+                const data = await res.json();
+                toast.error("Kayıt başarısız: " + (data.error || ""), { id: toastId });
+            }
+        } catch {
+            toast.error("Bağlantı hatası oluştu.", { id: toastId });
+        }
+    };
+
     const filteredCustomers = customers.filter(c =>
         c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         c.phone.toLowerCase().includes(searchQuery.toLowerCase())
@@ -165,7 +202,7 @@ export default function CustomersPage() {
                     >
                         <Upload size={16} /> Excel Yükle
                     </button>
-                    <button className="btn btn-primary" onClick={() => toast("Manuel ekleme modülü yakında!")}>
+                    <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
                         <Plus size={16} /> Yeni Müşteri
                     </button>
                 </div>
@@ -285,6 +322,64 @@ export default function CustomersPage() {
                                 </button>
                                 <button type="submit" className="btn btn-primary">
                                     Kaydet ve Kapat
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Manual Add Modal */}
+            {isAddModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h3>Yeni Müşteri Ekle</h3>
+                            <button className="modal-close" onClick={() => setIsAddModalOpen(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleAddCustomer}>
+                            <div className="modal-body">
+                                <div className="form-group">
+                                    <label className="form-label">Ad Soyad *</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        required
+                                        placeholder="Müşteri Adı"
+                                        value={newCustomer.name}
+                                        onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Telefon No *</label>
+                                    <input
+                                        type="text"
+                                        className="form-control"
+                                        required
+                                        placeholder="05XX XXX XX XX"
+                                        value={newCustomer.phone}
+                                        onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
+                                    />
+                                </div>
+                                <div className="form-group mb-0">
+                                    <label className="form-label">Notlar (İsteğe Bağlı)</label>
+                                    <textarea
+                                        className="form-control"
+                                        rows={3}
+                                        placeholder="Müşteri hakkında ek bilgiler..."
+                                        value={newCustomer.notes}
+                                        onChange={(e) => setNewCustomer({ ...newCustomer, notes: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setIsAddModalOpen(false)}>
+                                    İptal
+                                </button>
+                                <button type="submit" className="btn btn-primary">
+                                    Kaydet
                                 </button>
                             </div>
                         </form>
