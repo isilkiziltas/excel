@@ -36,22 +36,22 @@ export default function Dashboard() {
       </header>
       <div className="page-content">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="card stat-card">
-            <div className="stat-icon" style={{ backgroundColor: "rgba(88, 166, 255, 0.1)", color: "var(--primary)" }}>
+          <div className="card stat-card stat-gray">
+            <div className="stat-icon" style={{ backgroundColor: "var(--bg-tertiary)", color: "var(--text-secondary)" }}>
               <Users size={24} />
             </div>
             <div className="stat-label">Toplam Müşteri</div>
             <div className="stat-value">{stats.total}</div>
           </div>
-          <div className="card stat-card">
-            <div className="stat-icon" style={{ backgroundColor: "rgba(35, 134, 54, 0.1)", color: "var(--success)" }}>
+          <div className="card stat-card stat-green">
+            <div className="stat-icon" style={{ backgroundColor: "#dcfce7", color: "var(--success)" }}>
               <Phone size={24} />
             </div>
             <div className="stat-label">Bugün Aranacaklar</div>
             <div className="stat-value">{stats.today}</div>
           </div>
-          <div className="card stat-card">
-            <div className="stat-icon" style={{ backgroundColor: "rgba(218, 54, 51, 0.1)", color: "var(--danger)" }}>
+          <div className="card stat-card stat-red">
+            <div className="stat-icon" style={{ backgroundColor: "#fee2e2", color: "var(--danger)" }}>
               <CalendarClock size={24} />
             </div>
             <div className="stat-label">Geciken Aramalar</div>

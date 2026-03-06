@@ -273,13 +273,12 @@ export default function CustomersPage() {
                                     />
                                 </div>
                                 {(updateStatus === "ULAŞILAMADI" || updateStatus === "TEKRAR ARANACAK") && (
-                                    <div className="mt-4" style={{ padding: "12px", backgroundColor: "rgba(88, 166, 255, 0.1)", borderLeft: "4px solid var(--primary)", borderRadius: "4px" }}>
-                                        <p style={{ fontSize: "12px", color: "var(--primary)" }}>
+                                    <div className="mt-4" style={{ padding: "16px", backgroundColor: "#fef2f2", borderLeft: "4px solid var(--primary)", borderRadius: "var(--radius-md)" }}>
+                                        <p style={{ fontSize: "0.9rem", color: "#991b1b", margin: 0, fontWeight: 500 }}>
                                             <strong>Bilgi:</strong> Bu durumu seçtiğinizde, sistem arka planda otomatik olarak tam <strong>7 gün sonrasına</strong> hatırlatıcı görev oluşturacaktır.
                                         </p>
                                     </div>
-                                )}
-                            </div>
+                                )}                            </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={closeUpdateModal}>
                                     İptal
