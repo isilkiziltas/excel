@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Next.js / Node.js
+crm-app/node_modules
+crm-app/.next/
+crm-app/out/
+crm-app/build
+crm-app/.env
+crm-app/.env.local
+crm-app/prisma/dev.db
+crm-app/prisma/dev.db-journal
+
+# Logs
+crm-app/npm-debug.log*
+crm-app/yarn-debug.log*
+crm-app/yarn-error.log*
+crm-app/.pnpm-debug.log*
+
+# Typescript
+crm-app/*.tsbuildinfo
+crm-app/next-env.d.ts
