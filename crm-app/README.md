@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Olympus Gold CRM
 
-## Getting Started
+Müşteri takip süreçlerinizi dijitalleştiren, Excel bağımlılığını azaltan ve "Akıllı Hatırlatıcı" özelliğiyle otomatik 7 günlük arama planlamaları yapabilen modern, "Senior" seviyesi bir Web CRM Sistemi.
 
-First, run the development server:
+## 🚀 Özellikler
 
+- **Müşteri Yönetimi:** Yeni müşterileri manuel olarak veya tek tıkla Excel (`.xlsx`) dosyalarından içeri aktararak sisteme kaydedebilirsiniz.
+- **Akıllı Hatırlatıcı (7 Gün Mantığı):** Bir müşterinin durumunu "Ulaşılamadı" veya "Tekrar Aranacak" olarak işaretlediğinizde sistem arka planda otomatik olarak tam **7 gün sonrasına** yeni bir arama hatırlatıcısı kurar.
+- **Toplu İşlemler:** Onlarca müşteriyi aynı anda seçerek tek bir işlemle tümüne 7 günlük hatırlatıcı kurabilir ve ortak not yazabilirsiniz.
+- **Dashboard ve İstatistikler:** Toplam müşteri sayısını, bugün aranması gerekenleri ve tarihi geçmiş geciken aramaları tek bir ana ekranda (Dashboard) takip edebilirsiniz.
+- **Kurumsal Tasarım:** Olympus Gold markasına uygun; temiz, aydınlık tema (Light Mode), kırmızı vurgular ve **Oswald** typography içeren modern UI/UX mimarisi.
+
+## 🛠 Kullanılan Teknolojiler
+
+- **Frontend:** Next.js 14 (App Router), React, TypeScript
+- **Backend:** Next.js API Routes (Serverless Functions)
+- **Veritabanı:** SQLite (Kurulum gerektirmez, projeye dahildir)
+- **ORM:** Prisma
+- **Stil:** Pure CSS (Premium Light Mode UI)
+
+## 📦 Kurulum ve Çalıştırma
+
+Bu projeyi yerel bilgisayarınızda çalıştırmak için aşağıdaki adımları izleyin:
+
+### Gereksinimler
+- Node.js (v18 veya üzeri önerilir)
+
+### Adımlar
+
+1. **Projeyi indirin veya klonlayın:**
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/isilkiziltas/excel.git
+cd excel/crm-app
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. **Bağımlılıkları yükleyin:**
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. **Veritabanını hazırlayın (Prisma):**
+```bash
+npx prisma generate
+npx prisma db push
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+4. **Projeyi başlatın:**
+```bash
+npm run dev
+```
 
-## Learn More
+5. **Tarayıcıda açın:**
+Tarayıcınızı açın ve aşağıdaki adrese gidin:
+[http://localhost:3000](http://localhost:3000)
 
-To learn more about Next.js, take a look at the following resources:
+## 📁 Klasör Yapısı
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+* `src/app/` - Sayfa ve API yönlendirmelerinin (Routing) bulunduğu çekirdek dizin.
+* `src/app/api/` - Backend işlemlerini yürüten API uç noktaları.
+* `src/app/customers/` - Müşteri listesinin, ekleme modüllerinin ve toplu işlemlerin bağlandığı sayfa.
+* `prisma/` - Veritabanı şeması ve SQLite dosyası (`dev.db`).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ✍️ Notlar
+* Geliştirme ortamı için hiçbir veritabanı kurulumuna ihtiyaç yoktur; SQLite otomatik çalışır.
+* Eklemek istediğiniz müşteri Excel verilerinin sütun isimleri "MÜŞTERİ ADI" ve "TEL NO" formatlarına uygun olmalıdır.
