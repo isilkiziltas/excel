@@ -29,6 +29,11 @@ export default function CustomersPage() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [newCustomer, setNewCustomer] = useState({ name: "", phone: "", notes: "" });
 
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+    const [bulkStatus, setBulkStatus] = useState("ULAŞILAMADI");
+    const [bulkNote, setBulkNote] = useState("");
+
     // Update Form State
     const [updateStatus, setUpdateStatus] = useState("ULAŞILAMADI");
     const [updateNote, setUpdateNote] = useState("");
@@ -145,6 +150,57 @@ export default function CustomersPage() {
         return format(new Date(dateStr), "dd MMM yyyy", { locale: tr });
     };
 
+    const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.checked) {
+            setSelectedIds(filteredCustomers.map(c => c.id));
+        } else {
+            setSelectedIds([]);
+        }
+    };
+
+    const handleSelectOne = (id: string) => {
+        setSelectedIds(prev =>
+            prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+        );
+    };
+
+    const handleBulkUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (selectedIds.length === 0) return;
+
+        let nextDate = null;
+        if (bulkStatus === "ULAŞILAMADI" || bulkStatus === "TEKRAR ARANACAK" || bulkStatus === "BEKLİYOR") {
+            const nextWeek = new Date();
+            nextWeek.setDate(nextWeek.getDate() + 7);
+            nextDate = nextWeek.toISOString();
+        }
+
+        const toastId = toast.loading(`${selectedIds.length} müşteri toplu olarak güncelleniyor...`);
+        try {
+            const res = await fetch("/api/customers/bulk", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    customerIds: selectedIds,
+                    status: bulkStatus,
+                    notes: bulkNote,
+                    nextCallDate: nextDate,
+                }),
+            });
+
+            if (res.ok) {
+                toast.success(`${selectedIds.length} müşterinin arama durumu 7 günlük hatırlatıcı kurularak güncellendi!`, { id: toastId });
+                setIsBulkModalOpen(false);
+                setSelectedIds([]);
+                fetchCustomers();
+            } else {
+                toast.error("Toplu güncelleme başarısız.", { id: toastId });
+            }
+        } catch {
+            toast.error("Bağlantı hatası.", { id: toastId });
+        }
+    };
+
     const handleAddCustomer = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newCustomer.name || !newCustomer.phone) {
@@ -208,6 +264,22 @@ export default function CustomersPage() {
                 </div>
             </header>
 
+            {selectedIds.length > 0 && (
+                <div style={{ backgroundColor: "rgba(218, 37, 29, 0.05)", padding: "12px 32px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ fontWeight: 600, color: "var(--primary)" }}>
+                        {selectedIds.length} müşteri seçildi
+                    </div>
+                    <div className="flex gap-2">
+                        <button className="btn btn-secondary" onClick={() => setSelectedIds([])} style={{ padding: "6px 12px", fontSize: "0.8rem" }}>
+                            Seçimi Temizle
+                        </button>
+                        <button className="btn btn-primary" onClick={() => setIsBulkModalOpen(true)} style={{ padding: "6px 12px", fontSize: "0.8rem" }}>
+                            Toplu Sonuç / Hatırlatıcı Gir
+                        </button>
+                    </div>
+                </div>
+            )}
+
             <div className="page-content">
                 <div className="card mb-6">
                     <div className="form-group" style={{ marginBottom: 0, position: "relative" }}>
@@ -227,6 +299,13 @@ export default function CustomersPage() {
                     <table className="table">
                         <thead>
                             <tr>
+                                <th style={{ width: "40px", textAlign: "center" }}>
+                                    <input
+                                        type="checkbox"
+                                        onChange={handleSelectAll}
+                                        checked={filteredCustomers.length > 0 && selectedIds.length === filteredCustomers.length}
+                                    />
+                                </th>
                                 <th>Müşteri Adı</th>
                                 <th>Telefon</th>
                                 <th>Durum</th>
@@ -238,16 +317,23 @@ export default function CustomersPage() {
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan={6} style={{ textAlign: "center" }}>Yükleniyor...</td>
+                                    <td colSpan={7} style={{ textAlign: "center" }}>Yükleniyor...</td>
                                 </tr>
                             ) : filteredCustomers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={6} style={{ textAlign: "center" }}>Müşteri bulunamadı.</td>
+                                    <td colSpan={7} style={{ textAlign: "center" }}>Müşteri bulunamadı.</td>
                                 </tr>
                             ) : (
                                 filteredCustomers.map((c) => (
-                                    <tr key={c.id}>
-                                        <td style={{ fontWeight: 500 }}>{c.name}</td>
+                                    <tr key={c.id} style={{ backgroundColor: selectedIds.includes(c.id) ? "rgba(218, 37, 29, 0.03)" : "transparent" }}>
+                                        <td style={{ textAlign: "center" }}>
+                                            <input
+                                                type="checkbox"
+                                                checked={selectedIds.includes(c.id)}
+                                                onChange={() => handleSelectOne(c.id)}
+                                            />
+                                        </td>
+                                        <td style={{ fontWeight: 600 }}>{c.name}</td>
                                         <td>{c.phone}</td>
                                         <td>
                                             <span className={`badge ${getStatusBadgeClass(c.status)}`}>
