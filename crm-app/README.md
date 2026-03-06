@@ -1,4 +1,4 @@
-# Olympus Gold CRM
+# Akıllı Müşteri CRM (Oto-Hatırlatıcı Özellikli)
 
 Müşteri takip süreçlerinizi dijitalleştiren, Excel bağımlılığını azaltan ve "Akıllı Hatırlatıcı" özelliğiyle otomatik 7 günlük arama planlamaları yapabilen modern, "Senior" seviyesi bir Web CRM Sistemi.
 
@@ -8,7 +8,7 @@ Müşteri takip süreçlerinizi dijitalleştiren, Excel bağımlılığını aza
 - **Akıllı Hatırlatıcı (7 Gün Mantığı):** Bir müşterinin durumunu "Ulaşılamadı" veya "Tekrar Aranacak" olarak işaretlediğinizde sistem arka planda otomatik olarak tam **7 gün sonrasına** yeni bir arama hatırlatıcısı kurar.
 - **Toplu İşlemler:** Onlarca müşteriyi aynı anda seçerek tek bir işlemle tümüne 7 günlük hatırlatıcı kurabilir ve ortak not yazabilirsiniz.
 - **Dashboard ve İstatistikler:** Toplam müşteri sayısını, bugün aranması gerekenleri ve tarihi geçmiş geciken aramaları tek bir ana ekranda (Dashboard) takip edebilirsiniz.
-- **Kurumsal Tasarım:** Olympus Gold markasına uygun; temiz, aydınlık tema (Light Mode), kırmızı vurgular ve **Oswald** typography içeren modern UI/UX mimarisi.
+- **Modern Tasarım:** Temiz, aydınlık tema (Light Mode), kırmızı vurgular ve kurumsal typography içeren modern UI/UX mimarisi.
 
 ## 🛠 Kullanılan Teknolojiler
 
