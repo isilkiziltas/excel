@@ -98,7 +98,7 @@ a:hover {
   font-size: 1.5rem;
   font-weight: 700;
   font-family: var(--font-heading);
-  color: #000;
+  color: var(--text-primary);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
@@ -269,8 +269,8 @@ a:hover {
 .form-control {
   width: 100%;
   padding: 10px 12px;
-  background-color: #ffffff;
-  border: 1px solid #d1d5db;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   color: var(--text-primary);
   font-family: var(--font-body);

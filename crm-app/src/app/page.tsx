@@ -2,9 +2,11 @@
 import { useState, useEffect } from "react";
 import { Phone, Users, CalendarClock } from "lucide-react";
 import Link from "next/link";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ total: 0, today: 0, overdue: 0 });
+  const { t } = useLanguage();
 
   useEffect(() => {
     async function loadStats() {
@@ -32,7 +34,7 @@ export default function Dashboard() {
   return (
     <>
       <header className="header">
-        <h1 className="page-title">Dashboard Özet</h1>
+        <h1 className="page-title">{t("dashboardTitle")}</h1>
       </header>
       <div className="page-content">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -40,35 +42,35 @@ export default function Dashboard() {
             <div className="stat-icon" style={{ backgroundColor: "var(--bg-tertiary)", color: "var(--text-secondary)" }}>
               <Users size={24} />
             </div>
-            <div className="stat-label">Toplam Müşteri</div>
+            <div className="stat-label">{t("totalCustomers")}</div>
             <div className="stat-value">{stats.total}</div>
           </div>
           <div className="card stat-card stat-green">
             <div className="stat-icon" style={{ backgroundColor: "#dcfce7", color: "var(--success)" }}>
               <Phone size={24} />
             </div>
-            <div className="stat-label">Bugün Aranacaklar</div>
+            <div className="stat-label">{t("callsToday")}</div>
             <div className="stat-value">{stats.today}</div>
           </div>
           <div className="card stat-card stat-red">
             <div className="stat-icon" style={{ backgroundColor: "#fee2e2", color: "var(--danger)" }}>
               <CalendarClock size={24} />
             </div>
-            <div className="stat-label">Geciken Aramalar</div>
+            <div className="stat-label">{t("overdueCalls")}</div>
             <div className="stat-value">{stats.overdue}</div>
           </div>
         </div>
 
         <div className="card">
           <div className="flex-between">
-            <h2 className="card-title">Hızlı İşlemler</h2>
+            <h2 className="card-title">{t("quickActions")}</h2>
           </div>
           <p style={{ color: "var(--text-secondary)", marginBottom: "16px" }}>
-            Sisteme yeni müşteri ekleyebilir, mevcut kayıtları inceleyebilir veya &quot;Ulaşılamadı&quot; durumundaki müşterilere 7 günlük hatırlatıcılar kurabilirsiniz.
+            {t("quickActionsDesc")}
           </p>
           <div style={{ display: "flex", gap: "12px" }}>
             <Link href="/customers" className="btn btn-primary">
-              Müşteri Listesine Git & Excel Yükle
+              {t("goToCustomerList")}
             </Link>
           </div>
         </div>

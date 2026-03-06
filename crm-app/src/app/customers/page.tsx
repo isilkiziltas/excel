@@ -1,9 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/no-unused-vars */
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
-import { tr } from "date-fns/locale";
+import { tr, enUS } from "date-fns/locale";
 import toast from "react-hot-toast";
 import { Search, Plus, Upload, PhoneForwarded, X } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Customer = {
     id: string;
@@ -21,6 +23,9 @@ export default function CustomersPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const { t, language } = useLanguage();
+
+    const dateLocale = language === "en" ? enUS : tr;
 
     // Modals state
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
@@ -48,10 +53,10 @@ export default function CustomersPage() {
             } else {
                 console.error("API Error:", data);
                 setCustomers([]);
-                toast.error("Müşteri listesi alınırken sunucu hatası oluştu.");
+                toast.error(t("toastConnError"));
             }
         } catch {
-            toast.error("Müşteriler yüklenemedi.");
+            toast.error(t("toastConnError"));
         } finally {
             setLoading(false);
         }
@@ -68,7 +73,7 @@ export default function CustomersPage() {
         const formData = new FormData();
         formData.append("file", file);
 
-        const toastId = toast.loading("Excel yükleniyor...");
+        const toastId = toast.loading(t("loading"));
         try {
             const res = await fetch("/api/import", {
                 method: "POST",
@@ -76,13 +81,13 @@ export default function CustomersPage() {
             });
             const data = await res.json();
             if (res.ok) {
-                toast.success(`${data.count} müşteri başarıyla eklendi!`, { id: toastId });
+                toast.success(`${t("toastImportSuccessPrefix")}${data.count}${t("toastImportSuccessSuffix")}`, { id: toastId });
                 fetchCustomers();
             } else {
-                toast.error("Yükleme hatası: " + data.error, { id: toastId });
+                toast.error(`${t("toastImportFailed")}: ${data.error}`, { id: toastId });
             }
         } catch (e) {
-            toast.error("Bağlantı hatası.", { id: toastId });
+            toast.error(t("toastConnError"), { id: toastId });
         }
 
         // reset file input
@@ -105,15 +110,14 @@ export default function CustomersPage() {
         e.preventDefault();
         if (!selectedCustomer) return;
 
-        // 7 GÜN MANTIĞI: Eğer durum "Ulaşılamadı" veya "Tekrar Aranacak" ise
         let nextDate = null;
         if (updateStatus === "ULAŞILAMADI" || updateStatus === "TEKRAR ARANACAK" || updateStatus === "BEKLİYOR") {
             const nextWeek = new Date();
             nextWeek.setDate(nextWeek.getDate() + 7);
             nextDate = nextWeek.toISOString();
-        } // "TAMAMLANDI" durumunda nextDate null bırakılır
+        }
 
-        const toastId = toast.loading("Güncelleniyor...");
+        const toastId = toast.loading(t("saving"));
         try {
             const res = await fetch(`/api/customers/${selectedCustomer.id}`, {
                 method: "PUT",
@@ -121,20 +125,20 @@ export default function CustomersPage() {
                 body: JSON.stringify({
                     status: updateStatus,
                     notes: updateNote,
-                    lastCallDate: new Date().toISOString(), // Şu an arandı
+                    lastCallDate: new Date().toISOString(),
                     nextCallDate: nextDate,
                 }),
             });
 
             if (res.ok) {
-                toast.success("Arama durumu güncellendi ve 7 günlük hatırlatıcı kuruldu!", { id: toastId });
+                toast.success(t("toastUpdateSuccess"), { id: toastId });
                 closeUpdateModal();
                 fetchCustomers();
             } else {
-                toast.error("Güncelleme başarısız.", { id: toastId });
+                toast.error(t("toastUpdateFailed"), { id: toastId });
             }
         } catch (e) {
-            toast.error("Bağlantı hatası.", { id: toastId });
+            toast.error(t("toastConnError"), { id: toastId });
         }
     };
 
@@ -145,9 +149,17 @@ export default function CustomersPage() {
         return "badge-neutral";
     };
 
+    const translateStatus = (status: string) => {
+        if (status === "ULAŞILAMADI") return t("statusUnreachable");
+        if (status === "TAMAMLANDI") return t("statusCompleted");
+        if (status === "TEKRAR ARANACAK") return t("statusCallAgain");
+        if (status === "BEKLİYOR") return t("statusPending");
+        return status;
+    };
+
     const formatDate = (dateStr: string | null) => {
         if (!dateStr) return "-";
-        return format(new Date(dateStr), "dd MMM yyyy", { locale: tr });
+        return format(new Date(dateStr), "dd MMM yyyy", { locale: dateLocale });
     };
 
     const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,7 +187,7 @@ export default function CustomersPage() {
             nextDate = nextWeek.toISOString();
         }
 
-        const toastId = toast.loading(`${selectedIds.length} müşteri toplu olarak güncelleniyor...`);
+        const toastId = toast.loading(`${t("toastBulkUpdatingPrefix")}${selectedIds.length}${t("toastBulkUpdatingSuffix")}`);
         try {
             const res = await fetch("/api/customers/bulk", {
                 method: "POST",
@@ -189,26 +201,26 @@ export default function CustomersPage() {
             });
 
             if (res.ok) {
-                toast.success(`${selectedIds.length} müşterinin arama durumu 7 günlük hatırlatıcı kurularak güncellendi!`, { id: toastId });
+                toast.success(`${t("toastBulkSuccessPrefix")}${selectedIds.length}${t("toastBulkSuccessSuffix")}`, { id: toastId });
                 setIsBulkModalOpen(false);
                 setSelectedIds([]);
                 fetchCustomers();
             } else {
-                toast.error("Toplu güncelleme başarısız.", { id: toastId });
+                toast.error(t("toastBulkFailed"), { id: toastId });
             }
         } catch {
-            toast.error("Bağlantı hatası.", { id: toastId });
+            toast.error(t("toastConnError"), { id: toastId });
         }
     };
 
     const handleAddCustomer = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newCustomer.name || !newCustomer.phone) {
-            toast.error("İsim ve telefon numarası zorunludur.");
+            toast.error(t("toastNamePhoneRequired"));
             return;
         }
 
-        const toastId = toast.loading("Müşteri kaydediliyor...");
+        const toastId = toast.loading(t("toastAddingCustomer"));
         try {
             const res = await fetch("/api/customers", {
                 method: "POST",
@@ -222,16 +234,16 @@ export default function CustomersPage() {
             });
 
             if (res.ok) {
-                toast.success("Müşteri başarıyla eklendi!", { id: toastId });
+                toast.success(t("toastCustomerAddedSuccess"), { id: toastId });
                 setNewCustomer({ name: "", phone: "", notes: "" });
                 setIsAddModalOpen(false);
                 fetchCustomers();
             } else {
                 const data = await res.json();
-                toast.error("Kayıt başarısız: " + (data.error || ""), { id: toastId });
+                toast.error(`${t("toastAddFailed")} ` + (data.error || ""), { id: toastId });
             }
         } catch {
-            toast.error("Bağlantı hatası oluştu.", { id: toastId });
+            toast.error(t("toastConnError"), { id: toastId });
         }
     };
 
@@ -243,7 +255,7 @@ export default function CustomersPage() {
     return (
         <>
             <header className="header">
-                <h1 className="page-title">Müşteriler</h1>
+                <h1 className="page-title">{t("customersTitle")}</h1>
                 <div className="flex gap-2">
                     <input
                         type="file"
@@ -256,10 +268,10 @@ export default function CustomersPage() {
                         className="btn btn-secondary"
                         onClick={() => fileInputRef.current?.click()}
                     >
-                        <Upload size={16} /> Excel Yükle
+                        <Upload size={16} /> {t("uploadExcel")}
                     </button>
                     <button className="btn btn-primary" onClick={() => setIsAddModalOpen(true)}>
-                        <Plus size={16} /> Yeni Müşteri
+                        <Plus size={16} /> {t("newCustomer")}
                     </button>
                 </div>
             </header>
@@ -267,14 +279,14 @@ export default function CustomersPage() {
             {selectedIds.length > 0 && (
                 <div style={{ backgroundColor: "rgba(218, 37, 29, 0.05)", padding: "12px 32px", borderBottom: "1px solid var(--border-color)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ fontWeight: 600, color: "var(--primary)" }}>
-                        {selectedIds.length} müşteri seçildi
+                        {selectedIds.length} {t("customersSelected")}
                     </div>
                     <div className="flex gap-2">
                         <button className="btn btn-secondary" onClick={() => setSelectedIds([])} style={{ padding: "6px 12px", fontSize: "0.8rem" }}>
-                            Seçimi Temizle
+                            {t("clearSelection")}
                         </button>
                         <button className="btn btn-primary" onClick={() => setIsBulkModalOpen(true)} style={{ padding: "6px 12px", fontSize: "0.8rem" }}>
-                            Toplu Sonuç / Hatırlatıcı Gir
+                            {t("bulkActionBtn")}
                         </button>
                     </div>
                 </div>
@@ -287,7 +299,7 @@ export default function CustomersPage() {
                         <input
                             type="text"
                             className="form-control"
-                            placeholder="İsim veya telefon numarası ara..."
+                            placeholder={t("searchPlaceholder")}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{ paddingLeft: "40px" }}
@@ -306,22 +318,22 @@ export default function CustomersPage() {
                                         checked={filteredCustomers.length > 0 && selectedIds.length === filteredCustomers.length}
                                     />
                                 </th>
-                                <th>Müşteri Adı</th>
-                                <th>Telefon</th>
-                                <th>Durum</th>
-                                <th>Son Arama</th>
-                                <th>Gelecek Arama</th>
-                                <th>İşlemler</th>
+                                <th>{t("colName")}</th>
+                                <th>{t("colPhone")}</th>
+                                <th>{t("colStatus")}</th>
+                                <th>{t("colLastCall")}</th>
+                                <th>{t("colNextCall")}</th>
+                                <th>{t("colActions")}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <tr>
-                                    <td colSpan={7} style={{ textAlign: "center" }}>Yükleniyor...</td>
+                                    <td colSpan={7} style={{ textAlign: "center" }}>{t("loading")}</td>
                                 </tr>
                             ) : filteredCustomers.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} style={{ textAlign: "center" }}>Müşteri bulunamadı.</td>
+                                    <td colSpan={7} style={{ textAlign: "center" }}>{t("noCustomersFound")}</td>
                                 </tr>
                             ) : (
                                 filteredCustomers.map((c) => (
@@ -337,7 +349,7 @@ export default function CustomersPage() {
                                         <td>{c.phone}</td>
                                         <td>
                                             <span className={`badge ${getStatusBadgeClass(c.status)}`}>
-                                                {c.status}
+                                                {translateStatus(c.status)}
                                             </span>
                                         </td>
                                         <td>{formatDate(c.lastCallDate)}</td>
@@ -350,7 +362,7 @@ export default function CustomersPage() {
                                                 style={{ padding: "4px 8px", fontSize: "12px" }}
                                                 onClick={() => openUpdateModal(c)}
                                             >
-                                                <PhoneForwarded size={14} /> Sonuç Gir
+                                                <PhoneForwarded size={14} /> {t("enterResultBtn")}
                                             </button>
                                         </td>
                                     </tr>
@@ -365,7 +377,7 @@ export default function CustomersPage() {
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <div className="modal-header">
-                            <h3>Arama Sonucu: {selectedCustomer.name}</h3>
+                            <h3>{t("updateModalTitle")}: {selectedCustomer.name}</h3>
                             <button className="modal-close" onClick={closeUpdateModal}>
                                 <X size={20} />
                             </button>
@@ -373,41 +385,97 @@ export default function CustomersPage() {
                         <form onSubmit={handleUpdateCallStatus}>
                             <div className="modal-body">
                                 <div className="form-group">
-                                    <label className="form-label">Arama Durumu</label>
+                                    <label className="form-label">{t("callStatusLabel")}</label>
                                     <select
                                         className="form-control"
                                         value={updateStatus}
                                         onChange={(e) => setUpdateStatus(e.target.value)}
                                     >
-                                        <option value="BEKLİYOR">Bekliyor (7 Gün Hatırlatıcı Kurar)</option>
-                                        <option value="ULAŞILAMADI">Ulaşılamadı (7 Gün Hatırlatıcı Kurar)</option>
-                                        <option value="TEKRAR ARANACAK">Tekrar Aranacak (7 Gün Hatırlatıcı Kurar)</option>
-                                        <option value="TAMAMLANDI">Tamamlandı (Hatırlatıcı Gerekmez)</option>
+                                        <option value="BEKLİYOR">{t("statusPending")}</option>
+                                        <option value="ULAŞILAMADI">{t("statusUnreachable")}</option>
+                                        <option value="TEKRAR ARANACAK">{t("statusCallAgain")}</option>
+                                        <option value="TAMAMLANDI">{t("statusCompleted")}</option>
                                     </select>
                                 </div>
                                 <div className="form-group mb-0">
-                                    <label className="form-label">Arama Notları (İsteğe Bağlı)</label>
+                                    <label className="form-label">{t("noteOptLabel")}</label>
                                     <textarea
                                         className="form-control"
                                         rows={4}
-                                        placeholder="Görüşme detayları..."
+                                        placeholder={t("notePlaceholder")}
                                         value={updateNote}
                                         onChange={(e) => setUpdateNote(e.target.value)}
                                     />
                                 </div>
                                 {(updateStatus === "ULAŞILAMADI" || updateStatus === "TEKRAR ARANACAK") && (
-                                    <div className="mt-4" style={{ padding: "16px", backgroundColor: "#fef2f2", borderLeft: "4px solid var(--primary)", borderRadius: "var(--radius-md)" }}>
-                                        <p style={{ fontSize: "0.9rem", color: "#991b1b", margin: 0, fontWeight: 500 }}>
-                                            <strong>Bilgi:</strong> Bu durumu seçtiğinizde, sistem arka planda otomatik olarak tam <strong>7 gün sonrasına</strong> hatırlatıcı görev oluşturacaktır.
+                                    <div className="mt-4" style={{ padding: "16px", backgroundColor: "rgba(218, 37, 29, 0.1)", borderLeft: "4px solid var(--primary)", borderRadius: "var(--radius-md)" }}>
+                                        <p style={{ fontSize: "0.9rem", color: "var(--primary)", margin: 0, fontWeight: 500 }}>
+                                            <strong>Bilgi:</strong> {t("info7Days")}
                                         </p>
                                     </div>
                                 )}                            </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={closeUpdateModal}>
-                                    İptal
+                                    {t("cancel")}
                                 </button>
                                 <button type="submit" className="btn btn-primary">
-                                    Kaydet ve Kapat
+                                    {t("saveAndClose")}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Bulk Modal */}
+            {isBulkModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <h3>{t("bulkModalTitle")}</h3>
+                            <button className="modal-close" onClick={() => setIsBulkModalOpen(false)}>
+                                <X size={20} />
+                            </button>
+                        </div>
+                        <form onSubmit={handleBulkUpdate}>
+                            <div className="modal-body">
+                                <div className="form-group">
+                                    <label className="form-label">{t("callStatusLabel")}</label>
+                                    <select
+                                        className="form-control"
+                                        value={bulkStatus}
+                                        onChange={(e) => setBulkStatus(e.target.value)}
+                                    >
+                                        <option value="BEKLİYOR">{t("statusPending")}</option>
+                                        <option value="ULAŞILAMADI">{t("statusUnreachable")}</option>
+                                        <option value="TEKRAR ARANACAK">{t("statusCallAgain")}</option>
+                                        <option value="TAMAMLANDI">{t("statusCompleted")}</option>
+                                    </select>
+                                </div>
+                                <div className="form-group mb-0">
+                                    <label className="form-label">{t("commonNoteLabel")}</label>
+                                    <textarea
+                                        className="form-control"
+                                        rows={4}
+                                        placeholder={t("commonNotePlaceholder")}
+                                        value={bulkNote}
+                                        onChange={(e) => setBulkNote(e.target.value)}
+                                    />
+                                </div>
+                                {(bulkStatus === "ULAŞILAMADI" || bulkStatus === "TEKRAR ARANACAK") && (
+                                    <div className="mt-4" style={{ padding: "16px", backgroundColor: "rgba(218, 37, 29, 0.1)", borderLeft: "4px solid var(--primary)", borderRadius: "var(--radius-md)" }}>
+                                        <p style={{ fontSize: "0.9rem", color: "var(--primary)", margin: 0, fontWeight: 500 }}>
+                                            <strong>Bilgi:</strong> {t("bulkInfo7Days")}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setIsBulkModalOpen(false)}>
+                                    {t("cancel")}
+                                </button>
+                                <button type="submit" className="btn btn-primary">
+                                    {t("bulkSaveBtn")}
                                 </button>
                             </div>
                         </form>
@@ -420,7 +488,7 @@ export default function CustomersPage() {
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <div className="modal-header">
-                            <h3>Yeni Müşteri Ekle</h3>
+                            <h3>{t("addModalTitle")}</h3>
                             <button className="modal-close" onClick={() => setIsAddModalOpen(false)}>
                                 <X size={20} />
                             </button>
@@ -428,33 +496,33 @@ export default function CustomersPage() {
                         <form onSubmit={handleAddCustomer}>
                             <div className="modal-body">
                                 <div className="form-group">
-                                    <label className="form-label">Ad Soyad *</label>
+                                    <label className="form-label">{t("fullNameLabel")}</label>
                                     <input
                                         type="text"
                                         className="form-control"
                                         required
-                                        placeholder="Müşteri Adı"
+                                        placeholder={t("fullNamePlaceholder")}
                                         value={newCustomer.name}
                                         onChange={(e) => setNewCustomer({ ...newCustomer, name: e.target.value })}
                                     />
                                 </div>
                                 <div className="form-group">
-                                    <label className="form-label">Telefon No *</label>
+                                    <label className="form-label">{t("phoneLabel")}</label>
                                     <input
                                         type="text"
                                         className="form-control"
                                         required
-                                        placeholder="05XX XXX XX XX"
+                                        placeholder={t("phonePlaceholder")}
                                         value={newCustomer.phone}
                                         onChange={(e) => setNewCustomer({ ...newCustomer, phone: e.target.value })}
                                     />
                                 </div>
                                 <div className="form-group mb-0">
-                                    <label className="form-label">Notlar (İsteğe Bağlı)</label>
+                                    <label className="form-label">{t("noteOptLabel")}</label>
                                     <textarea
                                         className="form-control"
                                         rows={3}
-                                        placeholder="Müşteri hakkında ek bilgiler..."
+                                        placeholder={t("notePlaceholder")}
                                         value={newCustomer.notes}
                                         onChange={(e) => setNewCustomer({ ...newCustomer, notes: e.target.value })}
                                     />
@@ -462,10 +530,10 @@ export default function CustomersPage() {
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={() => setIsAddModalOpen(false)}>
-                                    İptal
+                                    {t("cancel")}
                                 </button>
                                 <button type="submit" className="btn btn-primary">
-                                    Kaydet
+                                    {t("save")}
                                 </button>
                             </div>
                         </form>
