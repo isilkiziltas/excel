@@ -1,12 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Phone, Users, CalendarClock } from "lucide-react";
+import { Phone, Users, CalendarClock, Menu } from "lucide-react";
 import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useUI } from "@/contexts/UIContext";
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ total: 0, today: 0, overdue: 0 });
   const { t } = useLanguage();
+  const { toggleSidebar } = useUI();
 
   useEffect(() => {
     async function loadStats() {
@@ -34,6 +36,9 @@ export default function Dashboard() {
   return (
     <>
       <header className="header">
+        <button className="hamburger-btn" onClick={toggleSidebar}>
+          <Menu size={24} />
+        </button>
         <h1 className="page-title">{t("dashboardTitle")}</h1>
       </header>
       <div className="page-content">

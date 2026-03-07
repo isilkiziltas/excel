@@ -4,8 +4,9 @@ import { useState, useEffect, useRef } from "react";
 import { format } from "date-fns";
 import { tr, enUS } from "date-fns/locale";
 import toast from "react-hot-toast";
-import { Search, Plus, Upload, PhoneForwarded, X } from "lucide-react";
+import { Search, Plus, Upload, PhoneForwarded, X, Menu } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useUI } from "@/contexts/UIContext";
 
 type Customer = {
     id: string;
@@ -24,6 +25,7 @@ export default function CustomersPage() {
     const [searchQuery, setSearchQuery] = useState("");
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { t, language } = useLanguage();
+    const { toggleSidebar } = useUI();
 
     const dateLocale = language === "en" ? enUS : tr;
 
@@ -296,7 +298,12 @@ export default function CustomersPage() {
     return (
         <>
             <header className="header">
-                <h1 className="page-title">{t("customersTitle")}</h1>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <button className="hamburger-btn" onClick={toggleSidebar}>
+                        <Menu size={24} />
+                    </button>
+                    <h1 className="page-title">{t("customersTitle")}</h1>
+                </div>
                 <div className="flex gap-2">
                     <input
                         type="file"

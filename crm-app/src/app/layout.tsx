@@ -1,12 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, Oswald } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/ban-ts-comment
-// @ts-ignore
-import SidebarBody from "./SidebarBody";
+import NavigationLayout from "@/components/NavigationLayout";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 const oswald = Oswald({ subsets: ["latin"], display: "swap", variable: "--font-heading" });
@@ -34,6 +31,8 @@ export const viewport = {
   viewportFit: "cover",
 };
 
+import { UIProvider } from "@/contexts/UIContext";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -44,20 +43,11 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider>
           <LanguageProvider>
-            <div className="app-container">
-              <SidebarBody />
-              <main className="main-content">
-                <Toaster position="top-right" toastOptions={{
-                  style: {
-                    background: 'var(--bg-secondary)',
-                    color: 'var(--text-primary)',
-                    border: '1px solid var(--border-color)',
-                    fontFamily: "var(--font-body)"
-                  }
-                }} />
+            <UIProvider>
+              <NavigationLayout>
                 {children}
-              </main>
-            </div>
+              </NavigationLayout>
+            </UIProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>
