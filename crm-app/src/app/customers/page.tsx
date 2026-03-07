@@ -43,13 +43,54 @@ export default function CustomersPage() {
     const [updateStatus, setUpdateStatus] = useState("ULAŞILAMADI");
     const [updateNote, setUpdateNote] = useState("");
 
-    const fetchCustomers = async () => {
+    // Play a gentle beep sound for notifications
+    const playReminderSound = () => {
+        try {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gainNode = ctx.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+            osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.1); // Slide up
+
+            gainNode.gain.setValueAtTime(0, ctx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.2, ctx.currentTime + 0.05); // Fade in
+            gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5); // Fade out
+
+            osc.connect(gainNode);
+            gainNode.connect(ctx.destination);
+
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.5);
+        } catch (e) {
+            console.warn("Audio API unsupported or blocked", e);
+        }
+    };
+
+    const fetchCustomers = async (showNotification = false) => {
         try {
             setLoading(true);
             const res = await fetch("/api/customers");
             const data = await res.json();
             if (Array.isArray(data)) {
                 setCustomers(data);
+
+                // Check if any customer is due today or overdue
+                if (showNotification) {
+                    const now = new Date();
+                    now.setHours(23, 59, 59, 999); // End of today
+                    const hasDue = data.some(c => c.nextCallDate && new Date(c.nextCallDate) <= now && c.status !== "TAMAMLANDI");
+                    if (hasDue) {
+                        playReminderSound();
+                        toast(t("callsToday") + ": Lütfen aranması gereken müşterileri kontrol ediniz.", {
+                            icon: '🔔',
+                            style: { border: '1px solid var(--danger)', color: 'var(--danger)' },
+                            duration: 5000,
+                        });
+                    }
+                }
             } else {
                 console.error("API Error:", data);
                 setCustomers([]);
@@ -63,7 +104,7 @@ export default function CustomersPage() {
     };
 
     useEffect(() => {
-        fetchCustomers();
+        fetchCustomers(true); // Check for reminders on first load
     }, []);
 
     const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -336,37 +377,48 @@ export default function CustomersPage() {
                                     <td colSpan={7} style={{ textAlign: "center" }}>{t("noCustomersFound")}</td>
                                 </tr>
                             ) : (
-                                filteredCustomers.map((c) => (
-                                    <tr key={c.id} style={{ backgroundColor: selectedIds.includes(c.id) ? "rgba(218, 37, 29, 0.03)" : "transparent" }}>
-                                        <td style={{ textAlign: "center" }}>
-                                            <input
-                                                type="checkbox"
-                                                checked={selectedIds.includes(c.id)}
-                                                onChange={() => handleSelectOne(c.id)}
-                                            />
-                                        </td>
-                                        <td style={{ fontWeight: 600 }}>{c.name}</td>
-                                        <td>{c.phone}</td>
-                                        <td>
-                                            <span className={`badge ${getStatusBadgeClass(c.status)}`}>
-                                                {translateStatus(c.status)}
-                                            </span>
-                                        </td>
-                                        <td>{formatDate(c.lastCallDate)}</td>
-                                        <td style={{ fontWeight: c.nextCallDate ? 600 : 400, color: c.nextCallDate && new Date(c.nextCallDate) <= new Date() ? "var(--danger)" : "inherit" }}>
-                                            {formatDate(c.nextCallDate)}
-                                        </td>
-                                        <td>
-                                            <button
-                                                className="btn btn-secondary"
-                                                style={{ padding: "4px 8px", fontSize: "12px" }}
-                                                onClick={() => openUpdateModal(c)}
-                                            >
-                                                <PhoneForwarded size={14} /> {t("enterResultBtn")}
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
+                                filteredCustomers.map((c) => {
+                                    // isDue checks if the nextCallDate is today or older
+                                    const now = new Date();
+                                    now.setHours(23, 59, 59, 999);
+
+                                    const isDue = c.nextCallDate && new Date(c.nextCallDate) <= now && c.status !== "TAMAMLANDI";
+                                    const isSelected = selectedIds.includes(c.id);
+                                    let rowClass = "";
+                                    if (isDue) rowClass = "row-due";
+
+                                    return (
+                                        <tr key={c.id} className={rowClass} style={{ backgroundColor: isSelected ? "rgba(218, 37, 29, 0.03)" : undefined }}>
+                                            <td style={{ textAlign: "center" }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={isSelected}
+                                                    onChange={() => handleSelectOne(c.id)}
+                                                />
+                                            </td>
+                                            <td style={{ fontWeight: 600 }}>{c.name}</td>
+                                            <td>{c.phone}</td>
+                                            <td>
+                                                <span className={`badge ${getStatusBadgeClass(c.status)}`}>
+                                                    {translateStatus(c.status)}
+                                                </span>
+                                            </td>
+                                            <td>{formatDate(c.lastCallDate)}</td>
+                                            <td style={{ fontWeight: c.nextCallDate ? 600 : 400 }}>
+                                                {formatDate(c.nextCallDate)}
+                                            </td>
+                                            <td>
+                                                <button
+                                                    className="btn btn-secondary"
+                                                    style={{ padding: "4px 8px", fontSize: "12px", border: isDue ? "1px solid var(--danger)" : undefined }}
+                                                    onClick={() => openUpdateModal(c)}
+                                                >
+                                                    <PhoneForwarded size={14} /> {t("enterResultBtn")}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    )
+                                })
                             )}
                         </tbody>
                     </table>
